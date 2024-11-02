@@ -1,0 +1,184 @@
+/* global.css */
+
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    font-family: system-ui, -apple-system, sans-serif;
+    background: linear-gradient(
+        rgba(108, 99, 255, 0.7),
+        rgba(115, 103, 240, 0.7)
+    ),
+    url("../images/global.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+/* Common layout classes */
+.page-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;  /* Add this */
+    z-index: 1;         /* Add this */
+}
+
+.main-title {
+    font-size: 2.25rem;
+    font-weight: bold;
+    color: white;
+    text-align: center;
+    margin: 2rem 0;
+    position: relative;  /* Add this */
+    z-index: 2;         /* Add this */
+}
+
+/* Form styles */
+
+.form-container {
+    margin-top: 2rem;   /* Change from -4rem to 2rem */
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;  /* Change from center to flex-start */
+    padding: 1rem;
+    position: relative;      /* Add this */
+    z-index: 1;             /* Add this */
+}
+
+.form-card {
+    background-color: white;
+    border-radius: 0.5rem;
+    padding: 2rem;
+    width: 100%;
+    max-width: 28rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.form-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+}
+
+/* Input styles */
+.input-group {
+    margin-bottom: 1rem;
+}
+
+.input-label {
+    display: block;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.input-field {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-field:focus {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+/* Button styles */
+.primary-button {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    background-color: #8b5cf6;
+    color: white;
+    border: none;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.primary-button:hover {
+    background-color: #7c3aed;
+}
+
+/* Social login section */
+.social-section {
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+.social-title {
+    color: #374151;
+    font-weight: 500;
+    margin-bottom: 1rem;
+}
+
+.social-icons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.social-icon {
+    color: #6b7280;
+    transition: transform 0.2s, color 0.2s;
+}
+
+.social-icon:hover {
+    color: #8b5cf6;
+    transform: scale(1.1);
+}
+
+/* Link styles */
+.text-link {
+    color: #8b5cf6;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.text-link:hover {
+    color: #7c3aed;
+}
+
+/* Error message styles */
+.error-message {
+    color: #ef4444;
+    text-align: center;
+    margin-top: 1rem;
+}
+
+/* Gender radio group */
+.radio-group {
+    display: flex;
+    gap: 1rem;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: #374151;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .form-card {
+        padding: 1.5rem;
+    }
+    
+    .main-title {
+        font-size: 1.875rem;
+    }
+}
