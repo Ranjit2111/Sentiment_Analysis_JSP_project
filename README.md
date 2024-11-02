@@ -31,49 +31,51 @@ This project is a web-based communication platform built using Java Server Pages
 ## PostgreSQL code for table creation:
 Set up a PostgreSQL database and import the necessary schemas and data. Feel free to use the code I give below 
 
-CREATE TABLE users (
+**`CREATE TABLE users (
     username VARCHAR(50) PRIMARY KEY,
     email VARCHAR(100) NOT NULL UNIQUE,
     phone VARCHAR(15) NOT NULL,
     password VARCHAR(50) NOT NULL,
     gender VARCHAR(10) NOT NULL,
     dob DATE NOT NULL
-);
+);`**
 
-CREATE TABLE messages (
+**`ALTER TABLE users
+ADD COLUMN bio TEXT,
+ADD COLUMN country VARCHAR(50);`**
+
+
+**`CREATE TABLE messages (
     id SERIAL PRIMARY KEY,
     sender VARCHAR(50) REFERENCES users(username),
     receiver VARCHAR(50) REFERENCES users(username),
     message TEXT NOT NULL,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+);`**
 
-ALTER TABLE users
-ADD COLUMN bio TEXT,
-ADD COLUMN country VARCHAR(50);
 
-CREATE TABLE groups (
+**`CREATE TABLE groups (
     group_id SERIAL PRIMARY KEY,
     group_name VARCHAR(50) NOT NULL,
     created_by VARCHAR(50) REFERENCES users(username),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+);`**
 
 
-CREATE TABLE group_members (
+**`CREATE TABLE group_members (
     group_id INT REFERENCES groups(group_id),
     username VARCHAR(50) REFERENCES users(username),
     PRIMARY KEY (group_id, username)
-);
+);`**
 
 
-CREATE TABLE group_messages (
+**`CREATE TABLE group_messages (
     message_id SERIAL PRIMARY KEY,
     group_id INT REFERENCES groups(group_id),
     sender VARCHAR(50) REFERENCES users(username),
     message TEXT NOT NULL,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+);`**
 
 ## Next steps:
 - Configure the database connection settings in your JDBC setup.
