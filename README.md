@@ -31,51 +31,62 @@ This project is a web-based communication platform built using Java Server Pages
 ## PostgreSQL code for table creation:
 Set up a PostgreSQL database and import the necessary schemas and data. Feel free to use the code I give below 
 
-**`CREATE TABLE users (
+## Database Schema
+
+This project utilizes the following database schema:
+
+```sql
+CREATE TABLE users (
     username VARCHAR(50) PRIMARY KEY,
     email VARCHAR(100) NOT NULL UNIQUE,
     phone VARCHAR(15) NOT NULL,
     password VARCHAR(50) NOT NULL,
     gender VARCHAR(10) NOT NULL,
     dob DATE NOT NULL
-);`**
-
-**`ALTER TABLE users
+);
+```
+```sql
+ALTER TABLE users
 ADD COLUMN bio TEXT,
-ADD COLUMN country VARCHAR(50);`**
+ADD COLUMN country VARCHAR(50);
+```
 
-
-**`CREATE TABLE messages (
+```sql
+CREATE TABLE messages (
     id SERIAL PRIMARY KEY,
     sender VARCHAR(50) REFERENCES users(username),
     receiver VARCHAR(50) REFERENCES users(username),
     message TEXT NOT NULL,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);`**
+);
+```
 
-
-**`CREATE TABLE groups (
+```sql
+CREATE TABLE groups (
     group_id SERIAL PRIMARY KEY,
     group_name VARCHAR(50) NOT NULL,
     created_by VARCHAR(50) REFERENCES users(username),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);`**
+);
+```
 
-
-**`CREATE TABLE group_members (
+```sql
+CREATE TABLE group_members (
     group_id INT REFERENCES groups(group_id),
     username VARCHAR(50) REFERENCES users(username),
     PRIMARY KEY (group_id, username)
-);`**
+);
+```
 
-
-**`CREATE TABLE group_messages (
+```sql
+CREATE TABLE group_messages (
     message_id SERIAL PRIMARY KEY,
     group_id INT REFERENCES groups(group_id),
     sender VARCHAR(50) REFERENCES users(username),
     message TEXT NOT NULL,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);`**
+);
+```
 
 ## Next steps:
 - Configure the database connection settings in your JDBC setup.
@@ -84,9 +95,6 @@ ADD COLUMN country VARCHAR(50);`**
 
 ## Contributing
 Feel free to contribute to this project by forking the repository and submitting a pull request. Your feedback and suggestions are welcome!
-
-## License
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Installation
 To run this project locally, follow these steps:
