@@ -27,7 +27,9 @@ This project is a web-based communication platform built using Java Server Pages
 - **`group_chat.jsp`**: Shows the message history for a selected group, allowing users to send new messages while viewing past conversations.
 - **`logout.jsp`**: Used for logging out the current user from the dashboard.
 
+
 ## PostgreSQL code for table creation:
+Set up a PostgreSQL database and import the necessary schemas and data. Feel free to use the code I give below 
 
 CREATE TABLE users (
     username VARCHAR(50) PRIMARY KEY,
@@ -73,6 +75,16 @@ CREATE TABLE group_messages (
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+## Next steps:
+- Configure the database connection settings in your JDBC setup.
+- Deploy the JSP files on a Java servlet container such as Apache Tomcat.
+- Access the application via your web browser.
+
+## Contributing
+Feel free to contribute to this project by forking the repository and submitting a pull request. Your feedback and suggestions are welcome!
+
+## License
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Installation
 To run this project locally, follow these steps:
