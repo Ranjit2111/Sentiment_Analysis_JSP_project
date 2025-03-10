@@ -1,0 +1,59 @@
+# NetBeans specific
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+nbactions.xml
+nb-configuration.xml
+
+# Class Files
+*.class
+
+# Package Files
+# *.jar - We'll include the jar files for easier setup
+
+# Maven
+target/
+
+# Gradle
+.gradle/
+build/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# Mac
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.swp
+*~
+.*.swp
+._*
+
+# Database configuration files with credentials
+# Uncomment if you want to exclude database config files
+# src/conf/persistence.xml
+
+# Local configuration file
+# Uncomment if you want to exclude local config files
+# src/conf/local-config.properties 
