@@ -6,7 +6,6 @@
     <title>Sentiment Analytics | Group Chat</title>
     <link rel="stylesheet" href="assets/css/global.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .analytics-container {
             max-width: 1000px;
@@ -102,6 +101,78 @@
         .data-table tr:hover {
             background: #f9fafb;
         }
+        
+        .sentiment-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .sentiment-positive {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .sentiment-neutral {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+        
+        .sentiment-negative {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .progress-container {
+            width: 100%;
+            background-color: #e5e7eb;
+            border-radius: 9999px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .progress-positive {
+            background-color: #10B981;
+        }
+        
+        .progress-neutral {
+            background-color: #6B7280;
+        }
+        
+        .progress-negative {
+            background-color: #EF4444;
+        }
+        
+        .trend-table {
+            width: 100%;
+        }
+        
+        .trend-table th, .trend-table td {
+            padding: 0.75rem;
+            text-align: center;
+        }
+        
+        .trend-table th {
+            background-color: #f3f4f6;
+            font-weight: 600;
+        }
+        
+        .trend-table td {
+            border-top: 1px solid #e5e7eb;
+        }
     </style>
 </head>
 <body>
@@ -128,11 +199,11 @@
         int negativeCount = 0;
         String overallSentiment = "";
         
-        // Variables for chart data
-        ArrayList<String> chartLabels = new ArrayList<>();
-        ArrayList<Integer> positiveData = new ArrayList<>();
-        ArrayList<Integer> neutralData = new ArrayList<>();
-        ArrayList<Integer> negativeData = new ArrayList<>();
+        // Variables for trend data
+        List<String> trendDates = new ArrayList<>();
+        List<Integer> trendPositive = new ArrayList<>();
+        List<Integer> trendNeutral = new ArrayList<>();
+        List<Integer> trendNegative = new ArrayList<>();
     %>
     
     <div class="page-container">
@@ -196,10 +267,10 @@
                     ResultSet trendRs = trendStmt.executeQuery();
                     
                     while (trendRs.next()) {
-                        chartLabels.add("'" + trendRs.getDate("day_date") + "'");
-                        positiveData.add(trendRs.getInt("positive_count"));
-                        neutralData.add(trendRs.getInt("neutral_count"));
-                        negativeData.add(trendRs.getInt("negative_count"));
+                        trendDates.add(trendRs.getDate("day_date").toString());
+                        trendPositive.add(trendRs.getInt("positive_count"));
+                        trendNeutral.add(trendRs.getInt("neutral_count"));
+                        trendNegative.add(trendRs.getInt("negative_count"));
                     }
                     trendStmt.close();
                     
@@ -264,16 +335,112 @@
             
             <div class="chart-container">
                 <div class="chart-header">
-                    <h2 class="chart-title">Sentiment Trends (Last 7 Days)</h2>
+                    <h2 class="chart-title">Overall Sentiment Distribution</h2>
                 </div>
-                <canvas id="sentimentChart"></canvas>
+                
+                <% if (totalMessages > 0) { %>
+                    <div class="progress-container">
+                        <% 
+                            int positivePercent = Math.round((positiveCount / (float)totalMessages) * 100);
+                            int neutralPercent = Math.round((neutralCount / (float)totalMessages) * 100);
+                            int negativePercent = Math.round((negativeCount / (float)totalMessages) * 100);
+                        %>
+                        <div style="display: flex; width: 100%;">
+                            <% if (positivePercent > 0) { %>
+                                <div class="progress-bar progress-positive" style="width: <%= positivePercent %>%;">
+                                    <%= positivePercent %>%
+                                </div>
+                            <% } %>
+                            
+                            <% if (neutralPercent > 0) { %>
+                                <div class="progress-bar progress-neutral" style="width: <%= neutralPercent %>%;">
+                                    <%= neutralPercent %>%
+                                </div>
+                            <% } %>
+                            
+                            <% if (negativePercent > 0) { %>
+                                <div class="progress-bar progress-negative" style="width: <%= negativePercent %>%;">
+                                    <%= negativePercent %>%
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; margin-top: 0.5rem;">
+                        <div>
+                            <span class="sentiment-badge sentiment-positive">😊 Positive</span>
+                        </div>
+                        <div>
+                            <span class="sentiment-badge sentiment-neutral">😐 Neutral</span>
+                        </div>
+                        <div>
+                            <span class="sentiment-badge sentiment-negative">😔 Negative</span>
+                        </div>
+                </div>
+                <% } else { %>
+                    <p class="text-center" style="padding: 2rem; color: #6b7280;">No messages to analyze</p>
+                <% } %>
             </div>
             
             <div class="chart-container">
                 <div class="chart-header">
-                    <h2 class="chart-title">Overall Sentiment Distribution</h2>
+                    <h2 class="chart-title">Sentiment Trends (Last 7 Days)</h2>
                 </div>
-                <canvas id="sentimentPie"></canvas>
+                
+                <% if (!trendDates.isEmpty()) { %>
+                    <div class="table-responsive">
+                        <table class="trend-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Positive</th>
+                                    <th>Neutral</th>
+                                    <th>Negative</th>
+                                    <th>Overall</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% for (int i = 0; i < trendDates.size(); i++) { %>
+                                    <tr>
+                                        <td><%= trendDates.get(i) %></td>
+                                        <td class="sentiment-positive"><%= trendPositive.get(i) %></td>
+                                        <td class="sentiment-neutral"><%= trendNeutral.get(i) %></td>
+                                        <td class="sentiment-negative"><%= trendNegative.get(i) %></td>
+                                        <td>
+                                            <% 
+                                                int pos = trendPositive.get(i);
+                                                int neu = trendNeutral.get(i);
+                                                int neg = trendNegative.get(i);
+                                                String dailySentiment;
+                                                String sentimentClass;
+                                                String emoji;
+                                                
+                                                if (pos > neg && pos > neu) {
+                                                    dailySentiment = "Positive";
+                                                    sentimentClass = "sentiment-positive";
+                                                    emoji = "😊";
+                                                } else if (neg > pos && neg > neu) {
+                                                    dailySentiment = "Negative";
+                                                    sentimentClass = "sentiment-negative";
+                                                    emoji = "😔";
+                                                } else {
+                                                    dailySentiment = "Neutral";
+                                                    sentimentClass = "sentiment-neutral";
+                                                    emoji = "😐";
+                                                }
+                                            %>
+                                            <span class="sentiment-badge <%= sentimentClass %>">
+                                                <%= emoji %> <%= dailySentiment %>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                </div>
+                <% } else { %>
+                    <p class="text-center" style="padding: 2rem; color: #6b7280;">No trend data available</p>
+                <% } %>
             </div>
             
             <div class="table-container">
@@ -310,84 +477,5 @@
             </div>
         </div>
     </div>
-    
-    <script>
-        // Sentiment trend chart
-        const trendCtx = document.getElementById('sentimentChart').getContext('2d');
-        const trendChart = new Chart(trendCtx, {
-            type: 'line',
-            data: {
-                labels: [<%= String.join(",", chartLabels) %>],
-                datasets: [
-                    {
-                        label: 'Positive',
-                        data: [<%= positiveData.isEmpty() ? "" : String.join(",", positiveData.stream().map(Object::toString).toArray(String[]::new)) %>],
-                        borderColor: '#10B981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        tension: 0.1
-                    },
-                    {
-                        label: 'Neutral',
-                        data: [<%= neutralData.isEmpty() ? "" : String.join(",", neutralData.stream().map(Object::toString).toArray(String[]::new)) %>],
-                        borderColor: '#6B7280',
-                        backgroundColor: 'rgba(107, 114, 128, 0.1)',
-                        tension: 0.1
-                    },
-                    {
-                        label: 'Negative',
-                        data: [<%= negativeData.isEmpty() ? "" : String.join(",", negativeData.stream().map(Object::toString).toArray(String[]::new)) %>],
-                        borderColor: '#EF4444',
-                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                        tension: 0.1
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    },
-                    title: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            precision: 0
-                        }
-                    }
-                }
-            }
-        });
-        
-        // Sentiment distribution pie chart
-        const pieCtx = document.getElementById('sentimentPie').getContext('2d');
-        const pieChart = new Chart(pieCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Positive', 'Neutral', 'Negative'],
-                datasets: [{
-                    data: [<%= positiveCount %>, <%= neutralCount %>, <%= negativeCount %>],
-                    backgroundColor: [
-                        '#10B981',
-                        '#6B7280',
-                        '#EF4444'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    }
-                }
-            }
-        });
-    </script>
 </body>
 </html> 
