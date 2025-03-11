@@ -306,87 +306,101 @@
     </div>
 
     <script>
-        // Auto-scroll to bottom of chat
-        const chatMessages = document.getElementById('chatMessages');
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        // Get the group ID from the URL parameter
+        const groupId = '<%= request.getParameter("group_id") %>';
         
-        // Update sentiment summary
-        document.addEventListener('DOMContentLoaded', function() {
-            // Get the counts from hidden fields instead of directly in JavaScript
-            const posCount = parseInt(document.getElementById('positive-count').value) || 0;
-            const neutCount = parseInt(document.getElementById('neutral-count').value) || 0;
-            const negCount = parseInt(document.getElementById('negative-count').value) || 0;
-            const totalMessages = posCount + neutCount + negCount;
+        // Function to update sentiment summary based on hidden fields
+        function updateSentimentSummary() {
+            const positiveCount = parseInt(document.getElementById('positive-count').value) || 0;
+            const neutralCount = parseInt(document.getElementById('neutral-count').value) || 0;
+            const negativeCount = parseInt(document.getElementById('negative-count').value) || 0;
+            const totalCount = positiveCount + neutralCount + negativeCount;
             
-            let overallSentiment = "neutral";
-            if (posCount > negCount && posCount > neutCount) {
-                overallSentiment = "positive";
-            } else if (negCount > posCount && negCount > neutCount) {
-                overallSentiment = "negative";
+            let overallSentiment = "Neutral";
+            let emoji = "😐";
+            
+            if (positiveCount > negativeCount && positiveCount > neutralCount) {
+                overallSentiment = "Positive";
+                emoji = "😊";
+            } else if (negativeCount > positiveCount && negativeCount > neutralCount) {
+                overallSentiment = "Negative";
+                emoji = "😔";
             }
             
-            const sentimentEmoji = {
-                "positive": "😊",
-                "neutral": "😐",
-                "negative": "😔"
-            };
+            const positivePercent = totalCount > 0 ? Math.round((positiveCount / totalCount) * 100) : 0;
+            const neutralPercent = totalCount > 0 ? Math.round((neutralCount / totalCount) * 100) : 0;
+            const negativePercent = totalCount > 0 ? Math.round((negativeCount / totalCount) * 100) : 0;
             
-            let summaryHTML = '';
-            if (totalMessages > 0) {
-                const posPercent = Math.round((posCount / totalMessages) * 100);
-                const negPercent = Math.round((negCount / totalMessages) * 100);
-                const neutPercent = Math.round((neutCount / totalMessages) * 100);
-                
-                summaryHTML = '<div style="display: flex; align-items: center; gap: 0.75rem;">' +
-                    '<span class="sentiment-badge sentiment-positive">😊 ' + posCount + ' (' + posPercent + '%)</span>' +
-                    '<span class="sentiment-badge sentiment-neutral">😐 ' + neutCount + ' (' + neutPercent + '%)</span>' +
-                    '<span class="sentiment-badge sentiment-negative">😔 ' + negCount + ' (' + negPercent + '%)</span>' +
-                    '<span style="margin-left: 0.5rem;">Overall: <strong>' + sentimentEmoji[overallSentiment] + ' ' + overallSentiment + '</strong></span>' +
-                    '</div>';
-            } else {
-                summaryHTML = 'No messages yet';
-            }
+            const summaryHtml = `
+                <div class="sentiment-stats">
+                    <div class="sentiment-stat">
+                        <span class="sentiment-label">Positive:</span>
+                        <span class="sentiment-value sentiment-positive">${positiveCount} (${positivePercent}%)</span>
+                    </div>
+                    <div class="sentiment-stat">
+                        <span class="sentiment-label">Neutral:</span>
+                        <span class="sentiment-value sentiment-neutral">${neutralCount} (${neutralPercent}%)</span>
+                    </div>
+                    <div class="sentiment-stat">
+                        <span class="sentiment-label">Negative:</span>
+                        <span class="sentiment-value sentiment-negative">${negativeCount} (${negativePercent}%)</span>
+                    </div>
+                    <div class="sentiment-overall">
+                        <span class="sentiment-label">Overall:</span>
+                        <span class="sentiment-value">${emoji} ${overallSentiment}</span>
+                    </div>
+                </div>
+            `;
             
-            document.getElementById('sentimentSummary').innerHTML = summaryHTML;
-            
-            // Set up auto-refresh for chat messages
-            setInterval(refreshChat, 5000); // Refresh every 5 seconds
-        });
+            document.getElementById('sentimentSummary').innerHTML = summaryHtml;
+        }
         
-        // Function to refresh chat messages without reloading the page
+        // Function to refresh chat messages
         function refreshChat() {
-            const groupId = <%= request.getParameter("group_id") %>;
             const xhr = new XMLHttpRequest();
             xhr.open('GET', 'chat_messages.jsp?group_id=' + groupId, true);
             xhr.onload = function() {
                 if (xhr.status === 200) {
-                    // Update only the chat messages area
-                    document.getElementById('chatMessages').innerHTML = xhr.responseText;
-                    // Scroll to bottom after update
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    document.getElementById('chat-messages').innerHTML = xhr.responseText;
+                    updateSentimentSummary();
+                    scrollToBottom();
                 }
             };
             xhr.send();
         }
         
-        // Handle form submission via AJAX to prevent page reload
-        document.querySelector('.input-form').addEventListener('submit', function(e) {
-            e.preventDefault(); // Prevent normal form submission
+        // Function to scroll to bottom of chat
+        function scrollToBottom() {
+            const chatContainer = document.getElementById('chat-messages');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Submit message form via AJAX
+        document.getElementById('message-form').addEventListener('submit', function(e) {
+            e.preventDefault();
             
             const formData = new FormData(this);
-            formData.append('send_message', 'true');
-            
             const xhr = new XMLHttpRequest();
-            xhr.open('POST', 'chat.jsp', true);
+            xhr.open('POST', 'send_message.jsp', true);
             xhr.onload = function() {
                 if (xhr.status === 200) {
-                    // Clear the message input
-                    document.querySelector('.message-textarea').value = '';
-                    // Refresh the chat immediately
+                    document.getElementById('message').value = '';
                     refreshChat();
                 }
             };
             xhr.send(formData);
+        });
+        
+        // Start auto-refresh when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initial refresh
+            refreshChat();
+            
+            // Set up auto-refresh every 5 seconds
+            setInterval(refreshChat, 5000);
+            
+            // Scroll to bottom initially
+            scrollToBottom();
         });
     </script>
 </body>

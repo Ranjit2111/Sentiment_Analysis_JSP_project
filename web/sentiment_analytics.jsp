@@ -286,9 +286,9 @@
             
             <div class="chart-header" style="margin-bottom: 2rem;">
                 <h2 class="chart-title"><%= groupName %> - Sentiment Analysis</h2>
-                <a href="update_sentiment.jsp" class="primary-button" style="font-size: 0.875rem; padding: 0.5rem 0.75rem;">
-                    <i class="fas fa-sync-alt"></i> Update Sentiment Analysis
-                </a>
+                <div class="auto-update-indicator" style="font-size: 0.875rem; color: #059669;">
+                    <i class="fas fa-sync-alt fa-spin"></i> Auto-updating every 10 seconds
+                </div>
             </div>
             
             <div class="stat-cards">
@@ -486,38 +486,85 @@
     </div>
     
     <script>
-        // Auto-refresh sentiment analytics every 10 seconds
-        setInterval(function() {
-            const groupIdParam = '<%= groupId %>';
+        // Get the group ID from the URL parameter
+        const groupIdParam = '<%= request.getParameter("group_id") %>';
+        
+        // Function to refresh sentiment data
+        function refreshSentimentData() {
             const xhr = new XMLHttpRequest();
             xhr.open('GET', 'sentiment_data.jsp?group_id=' + groupIdParam, true);
             xhr.onload = function() {
                 if (xhr.status === 200) {
                     try {
                         const data = JSON.parse(xhr.responseText);
-                        
-                        // Update counts
-                        updateStatCard('positive', data.positiveCount, data.totalMessages);
-                        updateStatCard('neutral', data.neutralCount, data.totalMessages);
-                        updateStatCard('negative', data.negativeCount, data.totalMessages);
-                        
-                        // Update progress bars
-                        updateProgressBars(data.positiveCount, data.neutralCount, data.negativeCount, data.totalMessages);
-                        
-                        // Update trend data if available
-                        if (data.trendData && data.trendData.length > 0) {
-                            updateTrendTable(data.trendData);
-                        }
-                        
-                        // Update data table
-                        updateDataTable(data.positiveCount, data.neutralCount, data.negativeCount, data.totalMessages);
+                        updateSentimentStats(data.stats);
+                        updateSentimentTrend(data.trend);
+                        updateOverallSentiment(data.overall_sentiment);
                     } catch (e) {
                         console.error('Error parsing JSON:', e);
                     }
                 }
             };
             xhr.send();
-        }, 10000); // Refresh every 10 seconds
+        }
+        
+        // Start auto-refresh when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initial refresh
+            refreshSentimentData();
+            
+            // Set up auto-refresh every 10 seconds
+            setInterval(refreshSentimentData, 10000);
+        });
+        
+        function updateSentimentStats(stats) {
+            // Update counts and percentages in stat cards
+            updateStatCard('positive', stats.positive, stats.total);
+            updateStatCard('neutral', stats.neutral, stats.total);
+            updateStatCard('negative', stats.negative, stats.total);
+            
+            // Update progress bars
+            updateProgressBars(stats.positive, stats.neutral, stats.negative, stats.total);
+            
+            // Update data table
+            updateDataTable(stats.positive, stats.neutral, stats.negative, stats.total);
+        }
+        
+        function updateSentimentTrend(trend) {
+            const tbody = document.querySelector('.trend-table tbody');
+            if (tbody && trend && trend.length > 0) {
+                let html = '';
+                
+                trend.forEach(day => {
+                    html += `
+                        <tr>
+                            <td>${day.date}</td>
+                            <td class="sentiment-positive">${day.positive}</td>
+                            <td class="sentiment-neutral">${day.neutral}</td>
+                            <td class="sentiment-negative">${day.negative}</td>
+                            <td>
+                                <span class="sentiment-badge ${day.sentiment_class}">
+                                    ${day.emoji} ${day.sentiment}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                tbody.innerHTML = html;
+            }
+        }
+        
+        function updateOverallSentiment(overallSentiment) {
+            const overallSentimentElement = document.querySelector('.overall-sentiment');
+            if (overallSentimentElement && overallSentiment) {
+                overallSentimentElement.innerHTML = `
+                    <span class="sentiment-badge ${overallSentiment.sentiment_class}">
+                        ${overallSentiment.emoji} ${overallSentiment.sentiment}
+                    </span>
+                `;
+            }
+        }
         
         function updateStatCard(type, count, total) {
             const statValue = document.querySelector(`.stat-card .stat-value.sentiment-${type}`);
@@ -555,47 +602,6 @@
                     html += '</div>';
                     container.innerHTML = html;
                 }
-            }
-        }
-        
-        function updateTrendTable(trendData) {
-            const tbody = document.querySelector('.trend-table tbody');
-            if (tbody) {
-                let html = '';
-                
-                trendData.forEach(day => {
-                    let dailySentiment, sentimentClass, emoji;
-                    
-                    if (day.positive > day.negative && day.positive > day.neutral) {
-                        dailySentiment = "Positive";
-                        sentimentClass = "sentiment-positive";
-                        emoji = "😊";
-                    } else if (day.negative > day.positive && day.negative > day.neutral) {
-                        dailySentiment = "Negative";
-                        sentimentClass = "sentiment-negative";
-                        emoji = "😔";
-                    } else {
-                        dailySentiment = "Neutral";
-                        sentimentClass = "sentiment-neutral";
-                        emoji = "😐";
-                    }
-                    
-                    html += `
-                        <tr>
-                            <td>${day.date}</td>
-                            <td class="sentiment-positive">${day.positive}</td>
-                            <td class="sentiment-neutral">${day.neutral}</td>
-                            <td class="sentiment-negative">${day.negative}</td>
-                            <td>
-                                <span class="sentiment-badge ${sentimentClass}">
-                                    ${emoji} ${dailySentiment}
-                                </span>
-                            </td>
-                        </tr>
-                    `;
-                });
-                
-                tbody.innerHTML = html;
             }
         }
         

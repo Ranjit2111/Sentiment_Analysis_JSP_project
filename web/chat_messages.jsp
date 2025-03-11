@@ -1,7 +1,6 @@
 <%@ page import="java.sql.*, java.util.*" %>
-<%@ page import="com.globalcommunication.utils.SentimentAnalyzer" %>
-<%@ page import="com.globalcommunication.utils.SentimentAnalyzer.SentimentResult" %>
-<%@ page session="true" %>
+<%@ page import="com.globalcommunication.sentiment.SentimentAnalyzer" %>
+<%@ page import="com.globalcommunication.util.DatabaseUtil" %>
 <%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
 
 <%
@@ -10,14 +9,17 @@
     int neutralCount = 0;
     int negativeCount = 0;
     
+    Connection conn = null;
+    PreparedStatement pstmt = null;
+    ResultSet rs = null;
+    
     try {
-        Class.forName("org.postgresql.Driver");
-        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/global", "postgres", "say my name");
+        conn = DatabaseUtil.getConnection();
 
-        String chatQuery = "SELECT sender, message, timestamp FROM group_messages WHERE group_id = ? ORDER BY timestamp";
-        PreparedStatement chatStmt = conn.prepareStatement(chatQuery);
-        chatStmt.setInt(1, Integer.parseInt(request.getParameter("group_id")));
-        ResultSet chatRs = chatStmt.executeQuery();
+        String chatQuery = "SELECT sender, message, timestamp, sentiment FROM group_messages WHERE group_id = ? ORDER BY timestamp";
+        pstmt = conn.prepareStatement(chatQuery);
+        pstmt.setInt(1, Integer.parseInt(request.getParameter("group_id")));
+        rs = pstmt.executeQuery();
         
         // Display sentiment summary at the top
 %>
@@ -26,41 +28,33 @@
             <div id="sentimentSummary">Analyzing messages...</div>
         </div>
 <%
-        while (chatRs.next()) {
-            String sender = chatRs.getString("sender");
-            String message = chatRs.getString("message");
-            Timestamp timestamp = chatRs.getTimestamp("timestamp");
-            
-            // Analyze sentiment
-            SentimentResult sentiment = SentimentAnalyzer.analyzeSentiment(message);
-            String sentimentCategory = sentiment.getCategory();
-            String sentimentEmoji = SentimentAnalyzer.getSentimentEmoji(sentimentCategory);
+        while (rs.next()) {
+            String sender = rs.getString("sender");
+            String message = rs.getString("message");
+            Timestamp timestamp = rs.getTimestamp("timestamp");
+            String sentimentCategory = rs.getString("sentiment").toLowerCase();
             
             // Update sentiment counts
-            if ("POSITIVE".equals(sentimentCategory)) {
+            if ("positive".equals(sentimentCategory)) {
                 positiveCount++;
-            } else if ("NEGATIVE".equals(sentimentCategory)) {
+            } else if ("negative".equals(sentimentCategory)) {
                 negativeCount++;
             } else {
                 neutralCount++;
             }
             
+            // Get sentiment emoji
+            String sentimentEmoji = SentimentAnalyzer.getSentimentEmoji(sentimentCategory);
+            
             // Determine badge class based on sentiment
-            String badgeClass = "";
-            if ("POSITIVE".equals(sentimentCategory)) {
-                badgeClass = "sentiment-positive";
-            } else if ("NEGATIVE".equals(sentimentCategory)) {
-                badgeClass = "sentiment-negative";
-            } else {
-                badgeClass = "sentiment-neutral";
-            }
+            String badgeClass = "sentiment-" + sentimentCategory;
 %>
             <div class="message">
                 <div class="message-header">
                     <span class="message-sender">
                         <i class="fas fa-user-circle"></i> <%= sender %>
                         <span class="sentiment-badge <%= badgeClass %>">
-                            <%= sentimentEmoji %> <%= sentimentCategory.toLowerCase() %>
+                            <%= sentimentEmoji %> <%= sentimentCategory %>
                         </span>
                     </span>
                     <span class="message-time">
@@ -78,9 +72,11 @@
         <input type="hidden" id="neutral-count" value="<%= neutralCount %>">
         <input type="hidden" id="negative-count" value="<%= negativeCount %>">
 <%
-        chatStmt.close();
-        conn.close();
     } catch (Exception e) {
         out.println("<p class='error-message'><i class='fas fa-exclamation-circle'></i> Error: " + e.getMessage() + "</p>");
+    } finally {
+        if (rs != null) try { rs.close(); } catch (SQLException e) { /* ignore */ }
+        if (pstmt != null) try { pstmt.close(); } catch (SQLException e) { /* ignore */ }
+        if (conn != null) try { conn.close(); } catch (SQLException e) { /* ignore */ }
     }
 %> 
