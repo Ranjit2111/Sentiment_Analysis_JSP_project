@@ -2,9 +2,11 @@
 <%@ page import="com.globalcommunication.utils.SentimentAnalyzer" %>
 <%@ page import="com.globalcommunication.utils.SentimentAnalyzer.SentimentResult" %>
 <%@ page session="true" %>
+<%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Group Chat | Real-time Conversation</title>
     <link rel="stylesheet" href="assets/css/global.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -346,6 +348,45 @@
             }
             
             document.getElementById('sentimentSummary').innerHTML = summaryHTML;
+            
+            // Set up auto-refresh for chat messages
+            setInterval(refreshChat, 5000); // Refresh every 5 seconds
+        });
+        
+        // Function to refresh chat messages without reloading the page
+        function refreshChat() {
+            const groupId = <%= request.getParameter("group_id") %>;
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', 'chat_messages.jsp?group_id=' + groupId, true);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    // Update only the chat messages area
+                    document.getElementById('chatMessages').innerHTML = xhr.responseText;
+                    // Scroll to bottom after update
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            };
+            xhr.send();
+        }
+        
+        // Handle form submission via AJAX to prevent page reload
+        document.querySelector('.input-form').addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent normal form submission
+            
+            const formData = new FormData(this);
+            formData.append('send_message', 'true');
+            
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'chat.jsp', true);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    // Clear the message input
+                    document.querySelector('.message-textarea').value = '';
+                    // Refresh the chat immediately
+                    refreshChat();
+                }
+            };
+            xhr.send(formData);
         });
     </script>
 </body>

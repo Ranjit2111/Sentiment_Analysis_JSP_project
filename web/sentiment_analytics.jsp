@@ -1,8 +1,12 @@
 <%@ page import="java.sql.*, java.util.*" %>
+<%@ page import="com.globalcommunication.utils.SentimentAnalyzer" %>
+<%@ page import="com.globalcommunication.utils.SentimentAnalyzer.SentimentResult" %>
 <%@ page session="true" %>
+<%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Sentiment Analytics | Group Chat</title>
     <link rel="stylesheet" href="assets/css/global.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -282,6 +286,9 @@
             
             <div class="chart-header" style="margin-bottom: 2rem;">
                 <h2 class="chart-title"><%= groupName %> - Sentiment Analysis</h2>
+                <a href="update_sentiment.jsp" class="primary-button" style="font-size: 0.875rem; padding: 0.5rem 0.75rem;">
+                    <i class="fas fa-sync-alt"></i> Update Sentiment Analysis
+                </a>
             </div>
             
             <div class="stat-cards">
@@ -302,7 +309,7 @@
                         <% } %>
                     </div>
                     <div class="stat-label">
-                        <i class="fas fa-smile"></i> 😊
+                        <i class="fas fa-smile"></i> <%= SentimentAnalyzer.getSentimentEmoji("POSITIVE") %>
                     </div>
                 </div>
                 
@@ -315,7 +322,7 @@
                         <% } %>
                     </div>
                     <div class="stat-label">
-                        <i class="fas fa-meh"></i> 😐
+                        <i class="fas fa-meh"></i> <%= SentimentAnalyzer.getSentimentEmoji("NEUTRAL") %>
                     </div>
                 </div>
                 
@@ -328,7 +335,7 @@
                         <% } %>
                     </div>
                     <div class="stat-label">
-                        <i class="fas fa-frown"></i> 😔
+                        <i class="fas fa-frown"></i> <%= SentimentAnalyzer.getSentimentEmoji("NEGATIVE") %>
                     </div>
                 </div>
             </div>
@@ -368,13 +375,13 @@
                     
                     <div style="display: flex; justify-content: space-between; margin-top: 0.5rem;">
                         <div>
-                            <span class="sentiment-badge sentiment-positive">😊 Positive</span>
+                            <span class="sentiment-badge sentiment-positive"><%= SentimentAnalyzer.getSentimentEmoji("POSITIVE") %> Positive</span>
                         </div>
                         <div>
-                            <span class="sentiment-badge sentiment-neutral">😐 Neutral</span>
+                            <span class="sentiment-badge sentiment-neutral"><%= SentimentAnalyzer.getSentimentEmoji("NEUTRAL") %> Neutral</span>
                         </div>
                         <div>
-                            <span class="sentiment-badge sentiment-negative">😔 Negative</span>
+                            <span class="sentiment-badge sentiment-negative"><%= SentimentAnalyzer.getSentimentEmoji("NEGATIVE") %> Negative</span>
                         </div>
                 </div>
                 <% } else { %>
@@ -418,15 +425,15 @@
                                                 if (pos > neg && pos > neu) {
                                                     dailySentiment = "Positive";
                                                     sentimentClass = "sentiment-positive";
-                                                    emoji = "😊";
+                                                    emoji = SentimentAnalyzer.getSentimentEmoji("POSITIVE");
                                                 } else if (neg > pos && neg > neu) {
                                                     dailySentiment = "Negative";
                                                     sentimentClass = "sentiment-negative";
-                                                    emoji = "😔";
+                                                    emoji = SentimentAnalyzer.getSentimentEmoji("NEGATIVE");
                                                 } else {
                                                     dailySentiment = "Neutral";
                                                     sentimentClass = "sentiment-neutral";
-                                                    emoji = "😐";
+                                                    emoji = SentimentAnalyzer.getSentimentEmoji("NEUTRAL");
                                                 }
                                             %>
                                             <span class="sentiment-badge <%= sentimentClass %>">
@@ -458,24 +465,166 @@
                             <td>Positive Messages</td>
                             <td><%= positiveCount %></td>
                             <td><%= totalMessages > 0 ? Math.round((positiveCount / (double)totalMessages) * 100) : 0 %>%</td>
-                            <td><span class="sentiment-badge sentiment-positive">😊 Positive</span></td>
+                            <td><span class="sentiment-badge sentiment-positive"><%= SentimentAnalyzer.getSentimentEmoji("POSITIVE") %> Positive</span></td>
                         </tr>
                         <tr>
                             <td>Neutral Messages</td>
                             <td><%= neutralCount %></td>
                             <td><%= totalMessages > 0 ? Math.round((neutralCount / (double)totalMessages) * 100) : 0 %>%</td>
-                            <td><span class="sentiment-badge sentiment-neutral">😐 Neutral</span></td>
+                            <td><span class="sentiment-badge sentiment-neutral"><%= SentimentAnalyzer.getSentimentEmoji("NEUTRAL") %> Neutral</span></td>
                         </tr>
                         <tr>
                             <td>Negative Messages</td>
                             <td><%= negativeCount %></td>
                             <td><%= totalMessages > 0 ? Math.round((negativeCount / (double)totalMessages) * 100) : 0 %>%</td>
-                            <td><span class="sentiment-badge sentiment-negative">😔 Negative</span></td>
+                            <td><span class="sentiment-badge sentiment-negative"><%= SentimentAnalyzer.getSentimentEmoji("NEGATIVE") %> Negative</span></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
+    
+    <script>
+        // Auto-refresh sentiment analytics every 10 seconds
+        setInterval(function() {
+            const groupIdParam = '<%= groupId %>';
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', 'sentiment_data.jsp?group_id=' + groupIdParam, true);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        
+                        // Update counts
+                        updateStatCard('positive', data.positiveCount, data.totalMessages);
+                        updateStatCard('neutral', data.neutralCount, data.totalMessages);
+                        updateStatCard('negative', data.negativeCount, data.totalMessages);
+                        
+                        // Update progress bars
+                        updateProgressBars(data.positiveCount, data.neutralCount, data.negativeCount, data.totalMessages);
+                        
+                        // Update trend data if available
+                        if (data.trendData && data.trendData.length > 0) {
+                            updateTrendTable(data.trendData);
+                        }
+                        
+                        // Update data table
+                        updateDataTable(data.positiveCount, data.neutralCount, data.negativeCount, data.totalMessages);
+                    } catch (e) {
+                        console.error('Error parsing JSON:', e);
+                    }
+                }
+            };
+            xhr.send();
+        }, 10000); // Refresh every 10 seconds
+        
+        function updateStatCard(type, count, total) {
+            const statValue = document.querySelector(`.stat-card .stat-value.sentiment-${type}`);
+            if (statValue) {
+                let percentage = 0;
+                if (total > 0) {
+                    percentage = Math.round((count / total) * 100);
+                }
+                statValue.innerHTML = `${count} <small>(${percentage}%)</small>`;
+            }
+        }
+        
+        function updateProgressBars(positive, neutral, negative, total) {
+            if (total > 0) {
+                const positivePercent = Math.round((positive / total) * 100);
+                const neutralPercent = Math.round((neutral / total) * 100);
+                const negativePercent = Math.round((negative / total) * 100);
+                
+                const container = document.querySelector('.progress-container');
+                if (container) {
+                    let html = '<div style="display: flex; width: 100%;">';
+                    
+                    if (positivePercent > 0) {
+                        html += `<div class="progress-bar progress-positive" style="width: ${positivePercent}%;">${positivePercent}%</div>`;
+                    }
+                    
+                    if (neutralPercent > 0) {
+                        html += `<div class="progress-bar progress-neutral" style="width: ${neutralPercent}%;">${neutralPercent}%</div>`;
+                    }
+                    
+                    if (negativePercent > 0) {
+                        html += `<div class="progress-bar progress-negative" style="width: ${negativePercent}%;">${negativePercent}%</div>`;
+                    }
+                    
+                    html += '</div>';
+                    container.innerHTML = html;
+                }
+            }
+        }
+        
+        function updateTrendTable(trendData) {
+            const tbody = document.querySelector('.trend-table tbody');
+            if (tbody) {
+                let html = '';
+                
+                trendData.forEach(day => {
+                    let dailySentiment, sentimentClass, emoji;
+                    
+                    if (day.positive > day.negative && day.positive > day.neutral) {
+                        dailySentiment = "Positive";
+                        sentimentClass = "sentiment-positive";
+                        emoji = "😊";
+                    } else if (day.negative > day.positive && day.negative > day.neutral) {
+                        dailySentiment = "Negative";
+                        sentimentClass = "sentiment-negative";
+                        emoji = "😔";
+                    } else {
+                        dailySentiment = "Neutral";
+                        sentimentClass = "sentiment-neutral";
+                        emoji = "😐";
+                    }
+                    
+                    html += `
+                        <tr>
+                            <td>${day.date}</td>
+                            <td class="sentiment-positive">${day.positive}</td>
+                            <td class="sentiment-neutral">${day.neutral}</td>
+                            <td class="sentiment-negative">${day.negative}</td>
+                            <td>
+                                <span class="sentiment-badge ${sentimentClass}">
+                                    ${emoji} ${dailySentiment}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                tbody.innerHTML = html;
+            }
+        }
+        
+        function updateDataTable(positive, neutral, negative, total) {
+            const rows = document.querySelectorAll('.data-table tbody tr');
+            if (rows.length >= 3) {
+                // Update positive row
+                updateDataTableRow(rows[0], positive, total);
+                
+                // Update neutral row
+                updateDataTableRow(rows[1], neutral, total);
+                
+                // Update negative row
+                updateDataTableRow(rows[2], negative, total);
+            }
+        }
+        
+        function updateDataTableRow(row, count, total) {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 3) {
+                cells[1].textContent = count;
+                
+                let percentage = 0;
+                if (total > 0) {
+                    percentage = Math.round((count / total) * 100);
+                }
+                cells[2].textContent = percentage + '%';
+            }
+        }
+    </script>
 </body>
 </html> 

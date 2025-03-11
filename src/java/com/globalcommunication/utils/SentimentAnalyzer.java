@@ -69,6 +69,27 @@ public class SentimentAnalyzer {
         NEGATIVE_WORDS.put("useless", -1.3);
         NEGATIVE_WORDS.put("broken", -1.0);
         NEGATIVE_WORDS.put("negative", -1.0);
+        NEGATIVE_WORDS.put("die", -2.0);
+        NEGATIVE_WORDS.put("death", -2.0);
+        NEGATIVE_WORDS.put("dead", -2.0);
+        NEGATIVE_WORDS.put("kill", -2.0);
+        NEGATIVE_WORDS.put("hurt", -1.5);
+        NEGATIVE_WORDS.put("pain", -1.5);
+        NEGATIVE_WORDS.put("crying", -1.2);
+        NEGATIVE_WORDS.put("cry", -1.2);
+        NEGATIVE_WORDS.put("depressed", -2.0);
+        NEGATIVE_WORDS.put("depression", -2.0);
+        NEGATIVE_WORDS.put("anxiety", -1.5);
+        NEGATIVE_WORDS.put("anxious", -1.5);
+        NEGATIVE_WORDS.put("worried", -1.0);
+        NEGATIVE_WORDS.put("worry", -1.0);
+        NEGATIVE_WORDS.put("scared", -1.5);
+        NEGATIVE_WORDS.put("fear", -1.5);
+        NEGATIVE_WORDS.put("alone", -1.0);
+        NEGATIVE_WORDS.put("lonely", -1.2);
+        NEGATIVE_WORDS.put("miserable", -1.5);
+        NEGATIVE_WORDS.put("hopeless", -1.8);
+        NEGATIVE_WORDS.put("helpless", -1.5);
     }
     
     // Negation words that can reverse sentiment
@@ -117,9 +138,9 @@ public class SentimentAnalyzer {
         
         // Determine sentiment category based on score
         String category;
-        if (score > 0.5) {
+        if (score > 0.3) {  // Lower threshold for positive sentiment
             category = "POSITIVE";
-        } else if (score < -0.5) {
+        } else if (score < -0.3) {  // Lower threshold for negative sentiment
             category = "NEGATIVE";
         } else {
             category = "NEUTRAL";
