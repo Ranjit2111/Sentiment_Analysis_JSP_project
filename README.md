@@ -42,19 +42,10 @@ Global Communication Network is a web application that enables users to connect 
 ## Project Structure
 
 - `src/java/`: Java source files
-  - `com/globalcommunication/utils/`: Utility classes
-    - `SentimentAnalyzer.java`: Core sentiment analysis engine
-- `web/`: Web content
-  - `*.jsp`: JSP pages for the web interface
-  - `assets/`: Static resources (CSS, JavaScript)
-  - `chat.jsp`: Main chat interface with real-time sentiment analysis
-  - `sentiment_analytics.jsp`: Detailed sentiment analytics dashboard
-  - `update_sentiment.jsp`: Utility page for updating sentiment analysis
+  - `com/globalcommunication/utils/`: Utility classes including SentimentAnalyzer
+- `web/`: Web content (JSP, CSS, JavaScript)
 - `lib/`: External libraries
-  - `postgresql-42.7.3.jar`: PostgreSQL JDBC driver
 - `src/db/`: Database scripts
-  - `create_tables.sql`: Core database schema
-  - `add_sentiment_analysis.sql`: Sentiment analysis tables and functions
 
 ## Setup Instructions
 
@@ -100,12 +91,10 @@ Before you begin, ensure you have the following installed:
 
 5. Create the database schema:
    - Right-click on the `global` database and select **Query Tool**
-   - First execute `src/db/create_tables.sql` to create the base tables
-   - Then execute `src/db/add_sentiment_analysis.sql` to add sentiment analysis capabilities:
-     - Adds sentiment and sentiment_score columns to group_messages
-     - Creates sentiment_stats table for analytics
-     - Sets up triggers for automatic sentiment statistics updates
-   - Verify the tables are created by refreshing the database tree
+   - Open the SQL files from the project (`src/db/create_tables.sql` and `src/db/add_sentiment_analysis.sql`)
+   - Execute each script by selecting all content and clicking the **Execute/Refresh** button (or press F5)
+
+   Alternatively, you can copy and paste the SQL commands from these files directly into the Query Tool.
 
 ### 3. Setting up the Project
 
@@ -161,35 +150,16 @@ Before you begin, ensure you have the following installed:
 
 ## Sentiment Analysis Module
 
-The sentiment analysis module provides sophisticated analysis of message sentiment in group chats:
+The sentiment analysis module analyzes the emotional tone of messages in group chats:
 
-### Features
-- **Real-time Analysis**: Messages are analyzed as they are sent using a comprehensive word-weight system
-- **Visual Indicators**: 
-  - Color-coded badges (green for positive, grey for neutral, red for negative)
-  - Emoji indicators (😊 for positive, 😐 for neutral, 😔 for negative)
-- **Sentiment Categories**:
-  - Positive: Score > 0.3
-  - Neutral: Score between -0.3 and 0.3
-  - Negative: Score < -0.3
-- **Analytics Dashboard**:
-  - Overall sentiment distribution
-  - 7-day sentiment trends
-  - Message volume statistics
-  - Daily sentiment breakdowns
-
-### Technical Implementation
-- Uses weighted word lists for positive and negative sentiments
-- Handles negation words to flip sentiment
-- Stores both categorical sentiment and numerical scores
-- Maintains daily statistics through database triggers
-- Provides batch reanalysis capability through update_sentiment.jsp
+- **Real-time Analysis**: Messages are analyzed as they are sent
+- **Visual Indicators**: Color-coded badges and emojis show sentiment at a glance
+- **Sentiment Categories**: Positive, Neutral, and Negative
+- **Analytics Dashboard**: Access detailed sentiment analytics for each group
 
 To access sentiment analytics:
 1. Open a group chat
 2. Click on the "Sentiment Analytics" button in the chat header
-3. View real-time sentiment distribution and trends
-4. Use the "Update Sentiment Analysis" button to reanalyze all messages if needed
 
 ## Contributing
 
