@@ -56,4 +56,6 @@ logs/
 
 # Local configuration file
 # Uncomment if you want to exclude local config files
-# src/conf/local-config.properties 
+# src/conf/local-config.properties
+
+tatus 
